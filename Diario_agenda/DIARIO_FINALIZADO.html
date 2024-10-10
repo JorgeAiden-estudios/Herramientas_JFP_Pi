@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIARIO</title>
+    <style>
+        body {
+			width: 3840px;
+		}
+		.alumnoBlock {
+		}
+		.containerEnlaces {
+			display: flex;
+			flex-wrap: wrap;
+			max-width: 1280px;
+		}
+		.item {
+            background-color: cyan; /* Color de fondo para los elementos */
+            margin: 5px; /* Espacio entre los elementos */
+			height: 140px;
+			padding: 5px;
+            <!-- flex: 1 1 100px; /* Crece, se reduce, y establece el ancho base de los elementos */ -->
+        }
+		.stickyalumno {
+			display: table-cell;
+			position: sticky;
+			background-color: #F8E6F3;
+			z-index: 5;
+			top: 0px;
+			left: 10px;
+			width: 300px;
+			}
+		.editableTable thead {
+            position: sticky;
+            top: 100px; /* Ajustado para el título de la tabla */
+            background-color: #b2b2b2;
+            z-index: 5;
+        }
+		.container {
+            display: flex;
+            width: 3840px; 
+        }
+		th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+			height: 20px;
+        }
+        th {
+            background-color: cyan;
+        }
+        .col-75 {
+            width: 270px;
+        }
+        .col-25 {
+            width: 50px;
+        }
+		.floating-buttons {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: row;
+            gap: 5px;
+            z-index: 1000; /* Asegura que esté por encima de otros elementos */
+        }
+        .floating-buttons button, .floating-buttons a {
+            padding: 5px 10px;
+            background-color: #FCB9B9;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+            color: black;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+        .grey-bg {
+            background-color: #d0d0d0;
+        }
+    </style>
+</head>
+<body>
+<h1 contenteditable="true" id="anchor0">DIARIO FINAL<br></h1>
+<div class="floating-buttons">
+		<a href="#top">TOP</a>
+		<button id="saveButton"><b>GUARDAR PÁGINA</b></button>	
+        <button onclick="toggleBold()"><b>NEGRITA</b></button>
+        <button onclick="toggleHighlight()"><b>RESALTAR</b></button>
+        <button onclick="toggleGreyBackground()"><b>HECHO</b></button>
+		<button onclick="addAlumno()"><b>Añadir ALUMNO</b></button>
+    </div>
+<div id="containerEnlaces" class="containerEnlaces">    
+</div>
+
+<!-- TAREAS -->
+<div id="tareas">
+
+</div>
+
+
+<script>
+	// Añade filas a las asignaturas de un alumno solo
+	function addFiles() {
+    // Buscar el elemento para contener la tabla clonada.
+	// Busca donde se originó el evento, el elemento más cercano stickyalumno
+	// y después su vecino siguiente
+	var div = event.target.closest(".stickyalumno").nextElementSibling;
+
+    // Obtener las tablas dentro de este div específico
+    var tables = div.getElementsByClassName("editableTable");
+
+    // Añadir una fila a cada tabla dentro de ese div
+    Array.from(tables).forEach(function(table) {
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        cell1.innerHTML = "";
+        cell2.innerHTML = "";
+        cell1.contentEditable = "true";
+        cell2.contentEditable = "true";
+    });
+}
+</script>
+
+
+<script>
+function addAsignatura() {
+    // Tabla de la primera asignatura de cada alumno
+	var tablaPrimera = event.target.closest(".stickyalumno").nextElementSibling.firstElementChild;
+
+    // Clonar la tabla (incluyendo los hijos)
+    var tablaClonada = tablaPrimera.cloneNode(true);
+	
+	// Obtener todas las celdas de la tabla
+    var celdas = tablaClonada.getElementsByTagName("td");
+
+    // Iterar sobre las celdas y vaciar su contenido
+    for (var i = 0; i < celdas.length; i++) {
+        celdas[i].innerHTML = ""; // Vaciar el contenido de cada celda
+    }
+    // Buscar el elemento para contener la tabla clonada.
+	// Busca donde se originó el evento, el elemento más cercano stickyalumno
+	// y después su vecino siguiente
+	var nuevoDiv = event.target.closest(".stickyalumno").nextElementSibling
+    nuevoDiv.appendChild(tablaClonada);
+}
+</script>
+
+
+<script>
+	function toggleHighlight() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const span = document.createElement('span');
+            span.className = 'highlight';
+
+            if (range.startContainer.parentNode.classList.contains('highlight')) {
+                const highlightSpan = range.startContainer.parentNode;
+                highlightSpan.outerHTML = highlightSpan.innerHTML;
+            } else {
+                range.surroundContents(span);
+            }
+        }
+
+    function toggleGreyBackground() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+
+            const range = selection.getRangeAt(0);
+            const cell = range.startContainer.parentNode.closest('td, th');
+            if (cell) {
+                cell.classList.toggle('grey-bg');
+            }
+        }
+
+    function toggleBold() {
+            document.execCommand('bold', false, null);
+        }	
+</script>
+
+<script>
+document.getElementById('saveButton').addEventListener('click', function() {
+    const pageContent = document.documentElement.outerHTML;
+    const blob = new Blob([pageContent], {type: 'text/html'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'pagina_guardada.html';
+    link.click();
+    URL.revokeObjectURL(link.href);
+});
+</script>
+
+<script>
+function addAlumno(){
+	// Preguntar al usuario por el nombre de la tabla
+    const nombreAlumno = prompt("Introduce el nombre del Alumno:");
+	// Create element:
+	const para = document.createElement("div");
+	//OJO CON LAS COMILLAS INVERSAS PARA PONER HTML
+	para.innerHTML = `
+    <div class="alumnoBlock">
+	<div class="stickyalumno"> 
+	<h1 id="${nombreAlumno}" contenteditable="true"> ${nombreAlumno} </h1>
+		<button onclick="addFiles()">Añadir fila</button>
+		<button onclick="addAsignatura()">Añadir Asignatura</button>
+	</div>
+	<div class="container">
+		<table class="editableTable">	
+			<thead>
+				<tr>
+					<th class="col-75" contenteditable="true">Asignatura</th>
+					<th class="col-25" contenteditable="true">Fechas</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr><td contenteditable="true" class="col-75"></td><td contenteditable="true" class="col-25"></td></tr>
+				<tr><td contenteditable="true" class="col-75"></td><td contenteditable="true" class="col-25"></td></tr>				      
+		</tbody>
+		</table>
+	</div>
+	</div>
+	<div class="alumnoBlock">
+	<div class="stickyalumno"> 
+	<h1 id="${nombreAlumno}Correo" contenteditable="true"> ${nombreAlumno} Correo </h1>
+		<button onclick="addFiles()">Añadir fila</button>
+		<button onclick="addAsignatura()">Añadir Asignatura</button>
+	</div>
+	<div class="container">
+		<table class="editableTable">	
+			<thead>
+				<tr>
+					<th class="col-75" contenteditable="true">Asignatura</th>
+					<th class="col-25" contenteditable="true">Fechas</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr><td contenteditable="true" class="col-75"></td><td contenteditable="true" class="col-25"></td></tr>
+				<tr><td contenteditable="true" class="col-75"></td><td contenteditable="true" class="col-25"></td></tr>				      
+		</tbody>
+		</table>
+	</div>
+	</div>
+		`;
+	// Append to another element:
+	document.getElementById("tareas").appendChild(para);
+
+	// Create element:
+	const para2 = document.createElement("div");
+	//OJO CON LAS COMILLAS INVERSAS PARA PONER HTML
+	para2.innerHTML = `
+        <div class="item">
+                <h2 contenteditable="true" align="center">${nombreAlumno}</h2>
+                <h3 align="center"><a href="#${nombreAlumno}">Tareas</a></h3>
+				<h3 align="center"><a href="#${nombreAlumno}Correo">Correo</a></h3>
+        </div>
+		`;
+	// Append to another element:
+	document.getElementById("containerEnlaces").appendChild(para2);
+}
+</script>	
+
+</body>
+
+</html>
+
+DIARIO_FINALIZADO.html
+Mostrando DIARIO_FINALIZADO.html.
